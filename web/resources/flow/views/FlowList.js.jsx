@@ -8,20 +8,20 @@
  */
 
 // import primary libraries
-import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { Link, withRouter } from 'react-router-dom';
+import React from "react";
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+import { Link, withRouter } from "react-router-dom";
 
 // import actions
-import * as flowActions from '../flowActions';
+import * as flowActions from "../flowActions";
 
 // import global components
-import Binder from '../../../global/components/Binder.js.jsx';
+import Binder from "../../../global/components/Binder.js.jsx";
 
 // import resource components
-import FlowLayout from '../components/FlowLayout.js.jsx';
-import FlowListItem from '../components/FlowListItem.js.jsx';
+import FlowLayout from "../components/FlowLayout.js.jsx";
+import FlowListItem from "../components/FlowListItem.js.jsx";
 
 class FlowList extends Binder {
   constructor(props) {
@@ -30,7 +30,7 @@ class FlowList extends Binder {
 
   componentDidMount() {
     // fetch a list of your choice
-    this.props.dispatch(flowActions.fetchListIfNeeded('all')); // defaults to 'all'
+    this.props.dispatch(flowActions.fetchListIfNeeded("all")); // defaults to 'all'
   }
 
   render() {
@@ -58,55 +58,51 @@ class FlowList extends Binder {
      * NOTE: isEmpty is is usefull when the component references more than one
      * resource list.
      */
-    const isEmpty = (
-      !flowListItems
-      || !flowList
-    );
+    const isEmpty = !flowListItems || !flowList;
 
-    const isFetching = (
-      !flowListItems
-      || !flowList
-      || flowList.isFetching
-    )
+    const isFetching = !flowListItems || !flowList || flowList.isFetching;
 
     return (
       <FlowLayout>
-        <h1> Flow List </h1>
-        <hr/>
-        <Link to={'/flows/new'}> New Flow </Link>
-        <br/>
-        { isEmpty ?
-          (isFetching ? <h2>Loading...</h2> : <h2>Empty.</h2>)
-          :
+        <div className={`topbar center`}>
+          <h1> Flow List </h1>
+          <Link to={"/flows/new"} className="yt-btn">
+            New Flow
+          </Link>
+        </div>
+        <br />
+        {isEmpty ? (
+          isFetching ? (
+            <h2>Loading...</h2>
+          ) : (
+            <h2>Empty.</h2>
+          )
+        ) : (
           <div style={{ opacity: isFetching ? 0.5 : 1 }}>
-            <ul>
-              {flowListItems.map((flow, i) =>
+            <div>
+              {flowListItems.map((flow, i) => (
                 <FlowListItem key={flow._id + i} flow={flow} />
-              )}
-            </ul>
+              ))}
+            </div>
           </div>
-        }
+        )}
       </FlowLayout>
-    )
+    );
   }
 }
 
 FlowList.propTypes = {
   dispatch: PropTypes.func.isRequired
-}
+};
 
-const mapStoreToProps = (store) => {
+const mapStoreToProps = store => {
   /**
-  * NOTE: Yote refer's to the global Redux 'state' as 'store' to keep it mentally
-  * differentiated from the React component's internal state
-  */
+   * NOTE: Yote refer's to the global Redux 'state' as 'store' to keep it mentally
+   * differentiated from the React component's internal state
+   */
   return {
     flowStore: store.flow
-  }
-}
+  };
+};
 
-export default withRouter(
-  connect(
-    mapStoreToProps
-  )(FlowList)
-);
+export default withRouter(connect(mapStoreToProps)(FlowList));
