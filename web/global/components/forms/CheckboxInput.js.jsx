@@ -3,11 +3,11 @@
  */
 
 // import primary libraries
-import React from 'react';
-import PropTypes from 'prop-types';
+import React from "react";
+import PropTypes from "prop-types";
 
 // import components
-import Binder from '../Binder.js.jsx';
+import Binder from "../Binder.js.jsx";
 
 class CheckboxInput extends Binder {
   constructor(props) {
@@ -15,12 +15,12 @@ class CheckboxInput extends Binder {
     this.state = {
       isChecked: this.props.checked
     };
-    this._bind('_handleInputChange');
+    this._bind("_handleInputChange");
   }
 
   componentWillReceiveProps(nextProps) {
-    if(nextProps.value !== this.state.isChecked) {
-      this.setState({isChecked: !this.state.isChecked})
+    if (nextProps.value !== this.state.isChecked) {
+      this.setState({ isChecked: !this.state.isChecked });
     }
   }
 
@@ -30,22 +30,22 @@ class CheckboxInput extends Binder {
     const value = checked;
     const name = e.target.name;
     event.target = Object.assign({}, e.target, {
-      checked: checked
-      , name: name
-      , value: checked
+      checked: checked,
+      name: name,
+      value: checked
     });
     this.props.change(event);
   }
 
   render() {
     const {
-      checked
-      , disabled
-      , helpText
-      , label
-      , name
-      , required
-      , value
+      checked,
+      disabled,
+      helpText,
+      label,
+      name,
+      required,
+      value
     } = this.props;
     return (
       <div className="input-group">
@@ -53,36 +53,39 @@ class CheckboxInput extends Binder {
           checked={value}
           disabled={disabled}
           name={name}
+          id={name}
           onChange={this._handleInputChange}
           required={required}
           type="checkbox"
           value={value}
         />
         <label htmlFor={name}> {label} </label>
-        <br/>
-        <small className="help-text"><em>{helpText}</em></small>
+        <br />
+        <small className="help-text">
+          <em>{helpText}</em>
+        </small>
       </div>
-    )
+    );
   }
 }
 
 CheckboxInput.propTypes = {
-  change: PropTypes.func.isRequired
-  , checked: PropTypes.bool
-  , disabled: PropTypes.bool
-  , helpText: PropTypes.string
-  , label: PropTypes.string
-  , name: PropTypes.string.isRequired
-  , required: PropTypes.bool
-  , value: PropTypes.bool.isRequired
-}
+  change: PropTypes.func.isRequired,
+  checked: PropTypes.bool,
+  disabled: PropTypes.bool,
+  helpText: PropTypes.string,
+  label: PropTypes.string,
+  name: PropTypes.string.isRequired,
+  required: PropTypes.bool,
+  value: PropTypes.bool
+};
 
 CheckboxInput.defaultProps = {
-  checked: false
-  , disabled: false
-  , helpText: ''
-  , label: ''
-  , required: false 
-}
+  checked: false,
+  disabled: false,
+  helpText: "",
+  label: "",
+  required: false
+};
 
 export default CheckboxInput;
