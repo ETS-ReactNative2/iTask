@@ -86,7 +86,7 @@ class SingleFlow extends Binder {
 
   render() {
     const { showTaskForm, task, formHelpers } = this.state;
-    const { defaultTask, flowStore, match, taskStore } = this.props;
+    const { dispatch, defaultTask, flowStore, match, taskStore } = this.props;
     /**
      * use the selected.getItem() utility to pull the actual flow object from the map
      */
@@ -115,6 +115,32 @@ class SingleFlow extends Binder {
       !taskListItems || !taskList || taskList.isFetching;
 
     const isNewTaskEmpty = !task;
+    const TaskComponent = ({ task }) => (
+      <div>
+        <CheckboxInput
+          label={task.name}
+          name={task.name}
+          value={task.complete}
+          change={event => {
+            task.complete = event.target.checked;
+            console.log("Task Checked", task);
+            dispatch(taskActions.sendUpdateTask(task));
+            console.log(event.target.checked);
+          }}
+        />
+        <p>{task.description}</p>
+        <div>
+          <Link className="yt-btn x-small bordered" to={`/tasks/${task._id}`}>
+            Comment
+          </Link>
+        </div>
+      </div>
+    );
+
+    const Tasks = ({ completed }) =>
+      taskListItems
+        .filter(task => !!task.complete == completed)
+        .map((task, i) => <TaskComponent key={task._id + i} task={task} />);
 
     return (
       <FlowLayout>
@@ -145,27 +171,7 @@ class SingleFlow extends Binder {
             ) : (
               <div style={{ opacity: isTaskListFetching ? 0.5 : 1 }}>
                 <ul>
-                  {taskListItems.map((task, i) => (
-                    <div key={task._id + i}>
-                      <CheckboxInput
-                        label={task.name}
-                        name={task.name}
-                        value={task.completed}
-                        change={event => {
-                          console.log(event.target.checked);
-                        }}
-                      />
-                      <p>{task.description}</p>
-                      <div>
-                        <Link
-                          className="yt-btn x-small bordered"
-                          to={`/tasks/${task._id}`}
-                        >
-                          Comment
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                  <Tasks completed={false} />
                 </ul>
               </div>
             )}
@@ -187,12 +193,16 @@ class SingleFlow extends Binder {
                 />
               </div>
             ) : (
-              <button
-                className="yt-btn"
-                onClick={() => this.setState({ showTaskForm: true })}
-              >
-                Add new task
-              </button>
+              <div>
+                <button
+                  className="yt-btn"
+                  onClick={() => this.setState({ showTaskForm: true })}
+                >
+                  Add new task
+                </button>
+                <hr />
+                <Tasks completed={true} />
+              </div>
             )}
           </div>
         )}
