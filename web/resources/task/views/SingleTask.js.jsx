@@ -80,7 +80,7 @@ class SingleTask extends Binder {
 
     dispatch(noteActions.sendCreateNote(newNote)).then(noteRes => {
       if (noteRes.success) {
-        dispatch(noteActions.invalidateList("_flow", match.params.flowId));
+        dispatch(noteActions.invalidateList("_task", match.params.taskId));
         this.setState({
           showNoteForm: false,
           note: _.cloneDeep(defaultNote.obj)
@@ -129,15 +129,16 @@ class SingleTask extends Binder {
     const isNewNoteEmpty = !note;
     const isAdmin = userStore.roles && userStore.roles.indexOf("admin") >= 0;
 
+    const FetchingComponent = () =>
+      isFetching ? <h2>Loading...</h2> : <h2>Empty.</h2>;
+    const FetchingListComponent = () =>
+      isNoteListFetching ? <h3>Loading Notes...</h3> : <h3>Empty.</h3>;
+
     return (
       <TaskLayout>
         <h3> Single Task </h3>
         {isEmpty ? (
-          isFetching ? (
-            <h2>Loading...</h2>
-          ) : (
-            <h2>Empty.</h2>
-          )
+          <FetchingComponent />
         ) : (
           <div style={{ opacity: isFetching ? 0.5 : 1 }}>
             <h1>
@@ -145,7 +146,7 @@ class SingleTask extends Binder {
               <CheckboxInput
                 label={selectedTask.name}
                 name={selectedTask.name}
-                value={selectedTask.complete}
+                value={Boolean(selectedTask.complete)}
                 change={event => {
                   selectedTask.complete = event.target.checked;
                   if (selectedTask.complete) {
@@ -194,11 +195,7 @@ class SingleTask extends Binder {
             </Link>
 
             {isNoteListEmpty ? (
-              isNoteListFetching ? (
-                <h3>Loading Notes...</h3>
-              ) : (
-                <h3>Empty.</h3>
-              )
+              <FetchingListComponent />
             ) : (
               <div style={{ opacity: isNoteListFetching ? 0.5 : 1 }}>
                 <ul>

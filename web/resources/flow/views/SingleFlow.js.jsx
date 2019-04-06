@@ -120,7 +120,7 @@ class SingleFlow extends Binder {
         <CheckboxInput
           label={task.name}
           name={task.name}
-          value={task.complete}
+          value={Boolean(task.complete)}
           change={event => {
             task.complete = event.target.checked;
             if (task.complete) {
@@ -138,7 +138,13 @@ class SingleFlow extends Binder {
       </div>
     );
 
+    const FetchingComponent = () =>
+      isFlowFetching ? <h2>Loading...</h2> : <h2>Empty.</h2>;
+    const FetchingListComponent = () =>
+      isTaskListFetching ? <h2>Loading...</h2> : <h2>Empty.</h2>;
+
     const Tasks = ({ completed }) =>
+      taskListItems &&
       taskListItems
         .filter(task => !!task.complete == completed)
         .map((task, i) => <TaskComponent key={task._id + i} task={task} />);
@@ -147,11 +153,7 @@ class SingleFlow extends Binder {
       <FlowLayout>
         <h3> Single Flow </h3>
         {isFlowEmpty ? (
-          isFlowFetching ? (
-            <h2>Loading...</h2>
-          ) : (
-            <h2>Empty.</h2>
-          )
+          <FetchingComponent />
         ) : (
           <div style={{ opacity: isFlowFetching ? 0.5 : 1 }}>
             <h1> {selectedFlow.name}</h1>
@@ -164,11 +166,7 @@ class SingleFlow extends Binder {
             </Link>
             <hr />
             {isTaskListEmpty ? (
-              isTaskListFetching ? (
-                <h2>Loading...</h2>
-              ) : (
-                <h2>Empty.</h2>
-              )
+              <FetchingListComponent />
             ) : (
               <div style={{ opacity: isTaskListFetching ? 0.5 : 1 }}>
                 <ul>
