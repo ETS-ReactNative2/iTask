@@ -116,7 +116,7 @@ class SingleFlow extends Binder {
 
     const isNewTaskEmpty = !task;
     const TaskComponent = ({ task }) => (
-      <div className={task.complete && `task completed`}>
+      <div className={task.complete ? `task completed` : undefined}>
         <CheckboxInput
           label={task.name}
           name={task.name}
@@ -158,14 +158,17 @@ class SingleFlow extends Binder {
             className="content"
             style={{ opacity: isFlowFetching ? 0.5 : 1 }}
           >
-            <h1> {selectedFlow.name}</h1>
+            <div className="topbar center ">
+              <h1> {selectedFlow.name}</h1>
+              <Link
+                className="yt-btn x-small "
+                to={`${this.props.match.url}/update`}
+              >
+                Edit
+              </Link>
+            </div>
             <p> {selectedFlow.description}</p>
-            <Link
-              className="yt-btn x-small "
-              to={`${this.props.match.url}/update`}
-            >
-              Edit
-            </Link>
+
             <hr />
             {isTaskListEmpty ? (
               <FetchingListComponent />
@@ -197,7 +200,7 @@ class SingleFlow extends Binder {
               <div>
                 <div className="main-copy">
                   <button
-                    className="yt-btn"
+                    className="yt-btn x-small"
                     onClick={() => this.setState({ showTaskForm: true })}
                   >
                     Add new task

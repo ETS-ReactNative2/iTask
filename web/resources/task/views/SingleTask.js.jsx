@@ -236,7 +236,7 @@ class SingleTask extends Binder {
             ) : (
               <div>
                 <button
-                  className="yt-btn"
+                  className="yt-btn x-small"
                   onClick={() => {
                     this.setState({ showNoteForm: true });
                   }}

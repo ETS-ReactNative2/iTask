@@ -126,10 +126,12 @@ exports.listByRefs = (req, res) => {
             }`
           });
         } else {
-          motes = notes.map(note => {
-            note.user = note.user[0];
-            return note;
-          });
+          notes = notes
+            .filter(note => note._task.toString() === query._task)
+            .map(note => {
+              note.user = note.user[0];
+              return note;
+            });
           res.send({ success: true, notes });
         }
       }
