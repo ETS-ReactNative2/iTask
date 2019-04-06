@@ -9,33 +9,36 @@
  * any model changes on the client
  */
 
-let Note = require('mongoose').model('Note');
+let Note = require("mongoose").model("Note");
 
 exports.list = (req, res) => {
-  if(req.query.page) {
+  if (req.query.page) {
     // paginate on the server
     var page = req.query.page || 1;
     var per = req.query.per || 20;
-    Note.find({}).skip((page-1)*per).limit(per).exec((err, notes) => {
-      if(err || !notes) {
-        logger.error("ERROR:");
-        logger.info(err);
-        res.send({success: false, message: err});
-      } else {
-        res.send({
-          success: true
-          , notes: notes
-          , pagination: {
-            per: per
-            , page: page
-          }
-        });
-      }
-    });
+    Note.find({})
+      .skip((page - 1) * per)
+      .limit(per)
+      .exec((err, notes) => {
+        if (err || !notes) {
+          logger.error("ERROR:");
+          logger.info(err);
+          res.send({ success: false, message: err });
+        } else {
+          res.send({
+            success: true,
+            notes: notes,
+            pagination: {
+              per: per,
+              page: page
+            }
+          });
+        }
+      });
   } else {
     // list all notes
     Note.find({}).exec((err, notes) => {
-      if(err || !notes) {
+      if (err || !notes) {
         logger.error("ERROR:");
         logger.info(err);
         res.send({ success: false, message: err });
@@ -44,7 +47,7 @@ exports.list = (req, res) => {
       }
     });
   }
-}
+};
 
 exports.listByValues = (req, res) => {
   /**
@@ -54,49 +57,85 @@ exports.listByValues = (req, res) => {
    * node default max request headers + uri size is 80kb.
    */
 
-  if(!req.query[req.params.refKey]) {
+  if (!req.query[req.params.refKey]) {
     // make sure the correct query params are included
-    res.send({success: false, message: `Missing query param(s) specified by the ref: ${req.params.refKey}`});
+    res.send({
+      success: false,
+      message: `Missing query param(s) specified by the ref: ${
+        req.params.refKey
+      }`
+    });
   } else {
-    Note.find({[req.params.refKey]: {$in: [].concat(req.query[req.params.refKey]) }}, (err, notes) => {
-        if(err || !notes) {
-          res.send({success: false, message: `Error querying for notes by ${[req.params.refKey]} list`, err});
-        } else  {
-          res.send({success: true, notes});
+    Note.find(
+      { [req.params.refKey]: { $in: [].concat(req.query[req.params.refKey]) } },
+      (err, notes) => {
+        if (err || !notes) {
+          res.send({
+            success: false,
+            message: `Error querying for notes by ${[req.params.refKey]} list`,
+            err
+          });
+        } else {
+          res.send({ success: true, notes });
         }
-    })
+      }
+    );
   }
-}
+};
 
 exports.listByRefs = (req, res) => {
   /**
    * NOTE: This let's us query by ANY string or pointer key by passing in a refKey and refId
    */
 
-   // build query
+  // build query
   let query = {
-    [req.params.refKey]: req.params.refId === 'null' ? null : req.params.refId
-  }
+    [req.params.refKey]: req.params.refId === "null" ? null : req.params.refId
+  };
   // test for optional additional parameters
-  const nextParams = req.params['0'];
-  if(nextParams.split("/").length % 2 == 0) {
+  const nextParams = req.params["0"];
+  if (nextParams.split("/").length % 2 == 0) {
     // can't have length be uneven, throw error
-    res.send({success: false, message: "Invalid parameter length"});
+    res.send({ success: false, message: "Invalid parameter length" });
   } else {
-    if(nextParams.length !== 0) {
-      for(let i = 1; i < nextParams.split("/").length; i+= 2) {
-        query[nextParams.split("/")[i]] = nextParams.split("/")[i+1] === 'null' ? null : nextParams.split("/")[i+1]
+    if (nextParams.length !== 0) {
+      for (let i = 1; i < nextParams.split("/").length; i += 2) {
+        query[nextParams.split("/")[i]] =
+          nextParams.split("/")[i + 1] === "null"
+            ? null
+            : nextParams.split("/")[i + 1];
       }
     }
-    Note.find(query, (err, notes) => {
-      if(err || !notes) {
-        res.send({success: false, message: `Error retrieving notes by ${req.params.refKey}: ${req.params.refId}`});
-      } else {
-        res.send({success: true, notes})
+    Note.aggregate(
+      [
+        {
+          $lookup: {
+            from: "users",
+            localField: "_user",
+            foreignField: "_id",
+            as: "user"
+          }
+        }
+      ],
+      (err, notes) => {
+        if (err || !notes) {
+          res.send({
+            success: false,
+            message: `Error retrieving notes by ${req.params.refKey}: ${
+              req.params.refId
+            }`
+          });
+        } else {
+          motes = notes.map(note => {
+            note.user = note.user[0];
+            return note;
+          });
+          res.send({ success: true, notes });
+        }
       }
-    })
+    );
   }
-}
+};
 
 exports.search = (req, res) => {
   // search by query parameters
@@ -104,11 +143,11 @@ exports.search = (req, res) => {
   let mongoQuery = {};
   let page, per;
 
-  for(key in req.query) {
-    if(req.query.hasOwnProperty(key)) {
-      if(key == "page") {
+  for (key in req.query) {
+    if (req.query.hasOwnProperty(key)) {
+      if (key == "page") {
         page = parseInt(req.query.page);
-      } else if(key == "per") {
+      } else if (key == "per") {
         per = parseInt(req.query.per);
       } else {
         logger.debug("found search query param: " + key);
@@ -118,28 +157,31 @@ exports.search = (req, res) => {
   }
 
   logger.info(mongoQuery);
-  if(page || per) {
+  if (page || per) {
     page = page || 1;
     per = per || 20;
-    Note.find(mongoQuery).skip((page-1)*per).limit(per).exec((err, notes) => {
-      if(err || !notes) {
-        logger.error("ERROR:");
-        logger.info(err);
-        res.send({ success: false, message: err });
-      } else {
-        res.send({
-          success: true
-          , notes: notes
-          , pagination: {
-            per: per
-            , page: page
-          }
-        });
-      }
-    });
+    Note.find(mongoQuery)
+      .skip((page - 1) * per)
+      .limit(per)
+      .exec((err, notes) => {
+        if (err || !notes) {
+          logger.error("ERROR:");
+          logger.info(err);
+          res.send({ success: false, message: err });
+        } else {
+          res.send({
+            success: true,
+            notes: notes,
+            pagination: {
+              per: per,
+              page: page
+            }
+          });
+        }
+      });
   } else {
     Note.find(mongoQuery).exec((err, notes) => {
-      if(err || !notes) {
+      if (err || !notes) {
         logger.error("ERROR:");
         logger.info(err);
         res.send({ success: false, message: err });
@@ -148,12 +190,12 @@ exports.search = (req, res) => {
       }
     });
   }
-}
+};
 
 exports.getById = (req, res) => {
-  logger.info('get note by id');
+  logger.info("get note by id");
   Note.findById(req.params.id).exec((err, note) => {
-    if(err) {
+    if (err) {
       logger.error("ERROR:");
       logger.info(err);
       res.send({ success: false, message: err });
@@ -164,33 +206,32 @@ exports.getById = (req, res) => {
       res.send({ success: true, note: note });
     }
   });
-}
+};
 
 exports.getSchema = (req, res) => {
   /**
    * This is admin protected and useful for displaying REST api documentation
    */
-  logger.info('get note full mongo schema object');
-  res.send({success: true, schema: Note.getSchema()});
-}
-
+  logger.info("get note full mongo schema object");
+  res.send({ success: true, schema: Note.getSchema() });
+};
 
 exports.getDefault = (req, res) => {
   /**
    * This is an open api call by default (see what I did there?) and is used to
    * return the default object back to the Create components on the client-side.
    */
-  logger.info('get note default object');
-  res.send({success: true, defaultObj: Note.getDefault()});
-}
+  logger.info("get note default object");
+  res.send({ success: true, defaultObj: Note.getDefault() });
+};
 
 exports.create = (req, res) => {
-  logger.info('creating new note');
+  logger.info("creating new note");
   let note = new Note({});
 
   // run through and create all fields on the model
-  for(var k in req.body) {
-    if(req.body.hasOwnProperty(k)) {
+  for (var k in req.body) {
+    if (req.body.hasOwnProperty(k)) {
       note[k] = req.body[k];
     }
   }
@@ -200,7 +241,7 @@ exports.create = (req, res) => {
       logger.error("ERROR:");
       logger.info(err);
       res.send({ success: false, message: err });
-    } else if(!note) {
+    } else if (!note) {
       logger.error("ERROR: Could not create Note.");
       res.send({ success: false, message: "Could not create Note." });
     } else {
@@ -208,47 +249,47 @@ exports.create = (req, res) => {
       res.send({ success: true, note: note });
     }
   });
-}
+};
 
 exports.update = (req, res) => {
-  logger.info('updating note');
+  logger.info("updating note");
   Note.findById(req.params.id).exec((err, note) => {
-    if(err) {
+    if (err) {
       logger.error("ERROR:");
       logger.info(err);
       res.send({ success: false, message: err });
-    } else if(!note) {
+    } else if (!note) {
       logger.error("ERROR: Note not found.");
       res.send({ success: false, message: "Note not found." });
     } else {
       // run through and update all fields on the model
-      for(var k in req.body) {
-        if(req.body.hasOwnProperty(k)) {
+      for (var k in req.body) {
+        if (req.body.hasOwnProperty(k)) {
           note[k] = req.body[k];
         }
       }
       // now edit the 'updated' date
       note.updated = new Date();
       note.save((err, note) => {
-        if(err) {
+        if (err) {
           logger.error("ERROR:");
           logger.info(err);
           res.send({ success: false, message: err });
-        } else if(!note) {
+        } else if (!note) {
           logger.error("ERROR: Could not save note.");
-          res.send({ success: false, message: "Could not save note."});
+          res.send({ success: false, message: "Could not save note." });
         } else {
           res.send({ success: true, note: note });
         }
       });
     }
   });
-}
+};
 
 exports.delete = (req, res) => {
   logger.warn("deleting note");
-  Note.findById(req.params.id).remove((err) => {
-    if(err) {
+  Note.findById(req.params.id).remove(err => {
+    if (err) {
       logger.error("ERROR:");
       logger.info(err);
       res.send({ success: false, message: err });
@@ -256,4 +297,4 @@ exports.delete = (req, res) => {
       res.send({ success: true, message: "Deleted note" });
     }
   });
-}
+};

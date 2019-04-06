@@ -11,6 +11,9 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { Link, withRouter } from "react-router-dom";
 
+// import other libraries
+import moment from "moment";
+
 // import actions
 import * as taskActions from "../taskActions";
 import * as noteActions from "../../note/noteActions";
@@ -25,7 +28,6 @@ import NoteForm from "../../note/components/NoteForm.js.jsx";
 class SingleTask extends Binder {
   constructor(props) {
     super(props);
-    console.log("constructor", this.props);
 
     this.state = {
       showNoteForm: false,
@@ -50,7 +52,7 @@ class SingleTask extends Binder {
 
   componentWillReceiveProps(nextProps) {
     const { dispatch, match } = this.props;
-    dispatch(taskActions.fetchListIfNeeded("_task", match.params.taskId));
+    dispatch(noteActions.fetchListIfNeeded("_task", match.params.taskId));
     this.setState({
       note: _.cloneDeep(nextProps.defaultNote.obj)
     });
@@ -71,10 +73,9 @@ class SingleTask extends Binder {
     const { defaultNote, taskStore, userStore, dispatch, match } = this.props;
     const selectedTask = taskStore.selected.getItem();
     let newNote = { ...this.state.note };
-    newNote._flow = match.params.flowId;
+    newNote._flow = selectedTask._flow;
     newNote._task = selectedTask._id;
     newNote._user = userStore._id;
-    console.log("TCL: SingleTask -> _handleNoteSubmit -> newNote", newNote);
 
     dispatch(noteActions.sendCreateNote(newNote)).then(noteRes => {
       if (noteRes.success) {
@@ -90,23 +91,34 @@ class SingleTask extends Binder {
   }
 
   render() {
-    const { taskStore } = this.props;
     const { showNoteForm, note, formHelpers } = this.state;
-    console.log("This Props in render()", this.props);
-    console.log("This State in render()", this.state);
-
+    const { defaultNote, noteStore, match, taskStore } = this.props;
     /**
      * use the selected.getItem() utility to pull the actual task object from the map
      */
     const selectedTask = taskStore.selected.getItem();
 
+    // get the taskList meta info here so we can reference 'isFetching'
+    const noteList =
+      noteStore.lists && noteStore.lists._task
+        ? noteStore.lists._task[match.params.taskId]
+        : null;
+
+    /**
+     * use the reducer getList utility to convert the all.items array of ids
+     * to the actual note objetcs
+     */
+    const noteListItems = noteStore.util.getList("_task", match.params.taskId);
+
     const isEmpty =
       !selectedTask || !selectedTask._id || taskStore.selected.didInvalidate;
 
     const isFetching = taskStore.selected.isFetching;
+    const isNoteListEmpty = !noteListItems || !noteList;
+    const isNoteListFetching =
+      !noteListItems || !noteList || noteList.isFetching;
 
     const isNewNoteEmpty = !note;
-    console.log("showNoteForm", showNoteForm, isNewNoteEmpty, note, !note);
 
     return (
       <TaskLayout>
@@ -123,7 +135,38 @@ class SingleTask extends Binder {
             <hr />
             <p> {selectedTask.description}</p>
             <br />
-            <Link to={`${this.props.match.url}/update`}> Update Task </Link>
+            <Link
+              className="yt-btn x-small"
+              to={`${this.props.match.url}/update`}
+            >
+              Edit
+            </Link>
+
+            {isNoteListEmpty ? (
+              isNoteListFetching ? (
+                <h3>Loading Notes...</h3>
+              ) : (
+                <h3>Empty.</h3>
+              )
+            ) : (
+              <div style={{ opacity: isNoteListFetching ? 0.5 : 1 }}>
+                <ul>
+                  {noteListItems.map((note, i) => (
+                    <div key={note._id + i}>
+                      <h4>
+                        <i className="fa fa-user" />
+                        {`  ${note.user.firstName} ${note.user.lastName}`}
+                      </h4>
+
+                      <small>
+                        {moment(note.created).format("D/M/YYYY @ h:m")}
+                      </small>
+                      <div>{note.content}</div>
+                    </div>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {!isNewNoteEmpty && showNoteForm ? (
               <div>
@@ -171,7 +214,6 @@ const mapStoreToProps = store => {
    * NOTE: Yote refer's to the global Redux 'state' as 'store' to keep it mentally
    * differentiated from the React component's internal state
    */
-  console.log("TCL: store", store);
 
   return {
     taskStore: store.task,

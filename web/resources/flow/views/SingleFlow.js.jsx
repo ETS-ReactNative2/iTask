@@ -27,7 +27,6 @@ class SingleFlow extends Binder {
   constructor(props) {
     super(props);
 
-    console.log("constructor", this.props);
     this.state = {
       showTaskForm: false,
       task: _.cloneDeep(this.props.defaultTask.obj),
@@ -88,9 +87,6 @@ class SingleFlow extends Binder {
   render() {
     const { showTaskForm, task, formHelpers } = this.state;
     const { defaultTask, flowStore, match, taskStore } = this.props;
-
-    console.log("This Props in render()", this.props);
-    console.log("This State in render()", this.state);
     /**
      * use the selected.getItem() utility to pull the actual flow object from the map
      */
@@ -120,8 +116,6 @@ class SingleFlow extends Binder {
 
     const isNewTaskEmpty = !task;
 
-    console.log("showTaskForm", showTaskForm, isNewTaskEmpty, task, !task);
-
     return (
       <FlowLayout>
         <h3> Single Flow </h3>
@@ -136,7 +130,7 @@ class SingleFlow extends Binder {
             <h1> {selectedFlow.name}</h1>
             <p> {selectedFlow.description}</p>
             <Link
-              className="yt-btn x-small bordered"
+              className="yt-btn x-small "
               to={`${this.props.match.url}/update`}
             >
               Edit
