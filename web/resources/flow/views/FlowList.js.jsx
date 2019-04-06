@@ -31,6 +31,11 @@ class FlowList extends Binder {
   componentDidMount() {
     // fetch a list of your choice
     this.props.dispatch(flowActions.fetchListIfNeeded("all")); // defaults to 'all'
+    console.log("TCL: FlowList -> componentDidMount");
+  }
+
+  componentWillReceiveProps() {
+    this.props.dispatch(flowActions.fetchListIfNeeded("all")); // defaults to 'all'
   }
 
   render() {
@@ -62,24 +67,23 @@ class FlowList extends Binder {
 
     const isFetching = !flowListItems || !flowList || flowList.isFetching;
 
+    const FetchingComponent = () =>
+      isFetching ? <h2>Loading...</h2> : <h2>Empty.</h2>;
+
     return (
       <FlowLayout>
         <div className={`topbar center`}>
-          <h1> Flow List </h1>
+          <h1> Flows </h1>
           <Link to={"/flows/new"} className="yt-btn">
             New Flow
           </Link>
         </div>
         <br />
         {isEmpty ? (
-          isFetching ? (
-            <h2>Loading...</h2>
-          ) : (
-            <h2>Empty.</h2>
-          )
+          <FetchingComponent />
         ) : (
           <div style={{ opacity: isFetching ? 0.5 : 1 }}>
-            <div>
+            <div className="yt-row">
               {flowListItems.map((flow, i) => (
                 <FlowListItem key={flow._id + i} flow={flow} />
               ))}

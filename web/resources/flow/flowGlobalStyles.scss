@@ -9,3 +9,28 @@
   margin: 20px 0;
   align-items: center;
 }
+.yt-col.task {
+  border: 1px solid $movement-color;
+  padding: 10px;
+  margin: 5px;
+  h4 {
+    margin: 0;
+  }
+  .input-group {
+    margin-bottom: 5px;
+  }
+}
+.task.completed {
+  color: $soflete-gray;
+  text-decoration: line-through;
+  .input-group label {
+    position: relative;
+    &:before {
+      border-bottom: 1px solid red;
+      position: absolute;
+      content: "";
+      width: 100%;
+      height: 52%;
+    }
+  }
+}
