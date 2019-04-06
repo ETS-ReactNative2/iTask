@@ -123,9 +123,10 @@ class SingleFlow extends Binder {
           value={task.complete}
           change={event => {
             task.complete = event.target.checked;
-            console.log("Task Checked", task);
+            if (task.complete) {
+              task.status = "awaiting_approval";
+            }
             dispatch(taskActions.sendUpdateTask(task));
-            console.log(event.target.checked);
           }}
         />
         <p>{task.description}</p>
@@ -220,7 +221,6 @@ const mapStoreToProps = store => {
    * NOTE: Yote refer's to the global Redux 'state' as 'store' to keep it mentally
    * differentiated from the React component's internal state
    */
-  console.log("TCL: store", store);
   return {
     defaultTask: store.task.defaultItem,
     flowStore: store.flow,

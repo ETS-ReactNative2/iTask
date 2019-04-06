@@ -20,6 +20,7 @@ import * as noteActions from "../../note/noteActions";
 
 // import global components
 import Binder from "../../../global/components/Binder.js.jsx";
+import { CheckboxInput } from "../../../global/components/forms";
 
 // import resource components
 import TaskLayout from "../components/TaskLayout.js.jsx";
@@ -92,7 +93,14 @@ class SingleTask extends Binder {
 
   render() {
     const { showNoteForm, note, formHelpers } = this.state;
-    const { defaultNote, noteStore, match, taskStore } = this.props;
+    const {
+      defaultNote,
+      noteStore,
+      userStore,
+      match,
+      taskStore,
+      dispatch
+    } = this.props;
     /**
      * use the selected.getItem() utility to pull the actual task object from the map
      */
@@ -119,6 +127,7 @@ class SingleTask extends Binder {
       !noteListItems || !noteList || noteList.isFetching;
 
     const isNewNoteEmpty = !note;
+    const isAdmin = userStore.roles && userStore.roles.indexOf("admin") >= 0;
 
     return (
       <TaskLayout>
@@ -131,7 +140,49 @@ class SingleTask extends Binder {
           )
         ) : (
           <div style={{ opacity: isFetching ? 0.5 : 1 }}>
-            <h1> {selectedTask.name}</h1>
+            <h1>
+              {selectedTask.name}
+              <CheckboxInput
+                label={selectedTask.name}
+                name={selectedTask.name}
+                value={selectedTask.complete}
+                change={event => {
+                  selectedTask.complete = event.target.checked;
+                  if (selectedTask.complete) {
+                    selectedTask.status = "awaiting_approval";
+                  }
+                  dispatch(taskActions.sendUpdateTask(selectedTask));
+                }}
+              />
+            </h1>
+
+            {isAdmin &&
+              selectedTask.complete &&
+              selectedTask.status === "awaiting_approval" && (
+                <div>
+                  <span
+                    className="yt-btn fowler x-small "
+                    onClick={() => {
+                      selectedTask.status = "approved";
+                      dispatch(taskActions.sendUpdateTask(selectedTask));
+                    }}
+                  >
+                    Approve
+                  </span>
+                  &nbsp;
+                  <span
+                    className="yt-btn x-small"
+                    onClick={() => {
+                      selectedTask.status = "open";
+                      selectedTask.complete = false;
+                      dispatch(taskActions.sendUpdateTask(selectedTask));
+                    }}
+                  >
+                    Reject
+                  </span>
+                </div>
+              )}
+
             <hr />
             <p> {selectedTask.description}</p>
             <br />
@@ -190,7 +241,6 @@ class SingleTask extends Binder {
                 <button
                   className="yt-btn"
                   onClick={() => {
-                    console.log(" Where is it");
                     this.setState({ showNoteForm: true });
                   }}
                 >
